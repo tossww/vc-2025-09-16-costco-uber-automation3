@@ -4,6 +4,7 @@
   "description": "Automated Costco gift card purchasing and Uber Eats redemption system",
   "main": "dist/index.js",
   "scripts": {
+    "setup": "tsx src/scripts/setup.ts",
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
@@ -11,7 +12,9 @@
     "test:watch": "jest --watch",
     "lint": "eslint src/**/*.ts",
     "typecheck": "tsc --noEmit",
+    "db:migrate": "tsx src/modules/database/migrate.ts",
     "scheduler": "tsx src/scheduler/index.ts",
+    "scheduler:start": "tsx src/modules/scheduler/index.ts",
     "manual-purchase": "tsx src/scripts/manual-purchase.ts",
     "check-emails": "tsx src/scripts/check-emails.ts",
     "redeem-codes": "tsx src/scripts/redeem-codes.ts",

@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../data/automation.db"
+}
+
+model PurchaseAttempt {
+  id               String    @id @default(cuid())
+  scheduledAt      DateTime
+  attemptedAt      DateTime
+  status           String    // pending, in_progress, completed, failed, skipped
+  costcoOrderId    String?
+  totalAmount      Float?
+  errorMessage     String?
+  retryCount       Int       @default(0)
+  nextRetryAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  emailRecords     EmailProcessingRecord[]
+  giftCards        GiftCardCode[]
+}
+
+model EmailProcessingRecord {
+  id                String    @id @default(cuid())
+  emailId           String    @unique
+  receivedAt        DateTime
+  processedAt       DateTime?
+  emailType         String    // purchase_confirmation, gift_card_delivery, other
+  status            String    // pending, processed, failed
+  rawContent        String?   // Store raw email for reprocessing
+  extractedData     String?   // JSON string of extracted data
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  purchaseId        String?
+  purchase          PurchaseAttempt? @relation(fields: [purchaseId], references: [id])
+  giftCards         GiftCardCode[]
+}
+
+model GiftCardCode {
+  id                String    @id @default(cuid())
+  code              String    @unique
+  value             Float
+  extractedAt       DateTime
+  redeemedAt        DateTime?
+  redemptionStatus  String    // pending, redeemed, failed, expired
+  uberRedemptionId  String?
+  errorMessage      String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  purchaseId        String?
+  purchase          PurchaseAttempt? @relation(fields: [purchaseId], references: [id])
+  emailId           String?
+  email             EmailProcessingRecord? @relation(fields: [emailId], references: [id])
+}
+
+model SystemState {
+  id                String    @id @default(cuid())
+  key               String    @unique
+  value             String
+  lastModified      DateTime  @updatedAt
+}
+
+model AuditLog {
+  id                String    @id @default(cuid())
+  action            String
+  module            String
+  details           String    // JSON string
+  userId            String?
+  createdAt         DateTime  @default(now())
+}
+
+model NotificationLog {
+  id                String    @id @default(cuid())
+  type              String    // slack, discord, email
+  recipient         String
+  subject           String
+  content           String
+  status            String    // sent, failed
+  errorMessage      String?
+  createdAt         DateTime  @default(now())
+}
