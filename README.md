@@ -1,150 +1,300 @@
-# AI-Assisted Development Project Template
+# 🤖 Costco-Uber Automation System
 
-This template provides a robust foundation for building maintainable, AI-friendly software projects with strong architectural boundaries and comprehensive documentation.
+Automated system for weekly Costco gift card purchases with email monitoring and automatic Uber Eats redemption.
 
-## Quick Start
+## 🎯 Features
 
-From the parent directory, run:
+- **🛒 Automated Costco Purchases**: Weekly scheduled gift card purchases
+- **📧 Email Monitoring**: Real-time detection of gift card delivery emails
+- **💳 Auto-Redemption**: Automatic redemption of gift cards in Uber Eats
+- **🔄 Smart Retry Logic**: Exponential backoff for failed operations
+- **📊 Comprehensive Logging**: Detailed audit trails with security filtering
+- **🔔 Multi-Channel Notifications**: Slack, Discord, and email alerts
+- **🔐 Secure Credential Storage**: AES-256-GCM encryption at rest
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- Chrome/Chromium browser
+- Gmail account with app password or OAuth2
+- Costco and Uber Eats accounts
+
+### Installation
+
 ```bash
-# Copy template to new project
-../setup-new-project.sh ~/projects/my-app my-app-name
+# Clone the repository
+git clone https://github.com/tossww/vc-2025-09-16-costco-uber-automation3.git
+cd vc-2025-09-16-costco-uber-automation3
 
-# Navigate to your new project
-cd ~/projects/my-app
+# Install dependencies
+npm install
 
-# Start your first feature
-./scripts/new-feature.sh user-authentication
+# Run initial setup
+npm run setup
+
+# Initialize database
+npm run db:migrate
 ```
 
-## What's Included
+### Configuration
 
-### Core Documentation
-- **CLAUDE.md** - Instructions for AI agents working on your project
-- **PRD-TEMPLATE.md** - Feature specification template with acceptance criteria
-- **ARCHITECTURE.md** - Module boundaries and system design
-- **DECISION-LOG.md** - Track architectural decisions and trade-offs
-- **PROJECT-STATUS.md** - Current state and progress tracking
-- **TESTING-STRATEGY.md** - Progressive testing approach
-
-### Automation Scripts
-- **init-project.sh** - Initialize project structure
-- **new-feature.sh** - Start features with proper documentation
-- **pre-commit-checks.sh** - Quality gates before commits
-- **workflow-status.sh** - Monitor project health
-
-### Templates
-- **adr-template.md** - Architecture Decision Record template
-- **commit-message-template.txt** - Standardized commit messages
-
-## Project Philosophy
-
-1. **Functionality Over Code** - PRDs are the source of truth
-2. **Module Boundaries** - Clear separation prevents tech debt
-3. **Decision Logging** - Every choice is documented
-4. **AI-First Development** - Optimized for AI assistance
-5. **Progressive Testing** - Start simple, build confidence
-
-## Workflow
-
-### Starting a New Feature
+1. **Set up credentials**:
 ```bash
-# 1. Create feature with PRD
-./scripts/new-feature.sh email-parser
+npm run setup
+```
+Follow the prompts to enter:
+- Costco email and password
+- Uber Eats email and password
+- Gmail credentials for monitoring
 
-# 2. AI reads the PRD and context
-# Let AI review: CLAUDE.md, PRD, ARCHITECTURE.md
-
-# 3. Implement with AI assistance
-# AI follows the workflow and updates status
-
-# 4. Run checks before commit
-./scripts/pre-commit-checks.sh
+2. **Configure scheduling** in `.env`:
+```env
+SCHEDULING_ENABLED=true
+CRON_EXPRESSION=0 10 * * 0  # Sundays at 10 AM
+TIMEZONE=America/Los_Angeles
 ```
 
-### Daily Development
-1. Check project status: `./scripts/workflow-status.sh`
-2. Review outstanding decisions in DECISION-LOG.md
-3. Update PROJECT-STATUS.md weekly
-4. Run pre-commit checks before pushing
+3. **Optional: Configure notifications**:
+```env
+# Slack
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
+SLACK_ENABLED=true
 
-## Module Structure
+# Discord
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+DISCORD_ENABLED=true
+```
+
+## 📖 Usage
+
+### Automatic Mode (Recommended)
+
+Start the scheduler for fully automated operation:
+
+```bash
+npm run scheduler:start
+```
+
+The system will:
+- Purchase gift cards weekly (default: Sunday 10 AM)
+- Monitor emails every 5 minutes
+- Automatically redeem gift cards when received
+- Send notifications for all major events
+
+### Manual Commands
+
+```bash
+# Check system status
+npm run status
+
+# Manually trigger purchase
+npm run manual-purchase
+
+# Check emails for gift cards
+npm run check-emails
+
+# Redeem pending gift cards
+npm run redeem-codes
+```
+
+### Development
+
+```bash
+# Start in development mode with hot reload
+npm run dev
+
+# Type checking
+npm run typecheck
+
+# Linting
+npm run lint
+
+# Run tests
+npm test
+```
+
+## 🏗️ Architecture
 
 ```
 src/
 ├── modules/
-│   ├── knowledge/     # Memory and search
-│   ├── processing/    # Data pipelines
-│   ├── ui/           # User interfaces
-│   ├── study/        # Learning features
-│   └── shared/       # Common utilities
+│   ├── automation/      # Web automation (Playwright)
+│   │   ├── base.ts      # Base automation class
+│   │   ├── costco/      # Costco purchase automation
+│   │   └── uber/        # Uber redemption automation
+│   ├── email/           # Email monitoring
+│   │   └── monitor/     # Gmail & IMAP monitors
+│   ├── scheduler/       # Cron job management
+│   ├── notification/    # Alert system
+│   ├── database/        # Data persistence
+│   ├── security/        # Credential encryption
+│   ├── config/          # Configuration management
+│   └── logging/         # Secure logging
+├── scripts/             # Manual trigger scripts
+└── types/               # TypeScript definitions
 ```
 
-## Best Practices
+## 🔒 Security
 
-### For AI Agents
-- Always read CLAUDE.md first
-- Create PRDs before coding
-- Log decisions immediately
-- Update PROJECT-STATUS.md after major changes
+- **Encrypted Storage**: All credentials encrypted with AES-256-GCM
+- **Secure Logging**: Automatic sanitization of sensitive data
+- **Environment Isolation**: Credentials never logged or exposed
+- **Key Rotation**: Support for credential rotation
 
-### For Developers
-- Keep modules independent
-- Test at module boundaries
-- Document "why" not "what"
-- Commit early and often
+### Security Best Practices
 
-## Customization
+1. **Never commit `.env` or `.credentials.enc`**
+2. **Use strong, unique passwords**
+3. **Enable 2FA on all accounts when possible**
+4. **Rotate credentials regularly**
+5. **Monitor logs for suspicious activity**
 
-1. **Tech Stack**: Update ARCHITECTURE.md with your choices
-2. **Testing**: Modify TESTING-STRATEGY.md for your needs
-3. **Workflows**: Adjust scripts in `/scripts` directory
-4. **AI Instructions**: Customize CLAUDE.md for your domain
+## 📊 Monitoring
 
-## Common Commands
+### System Status
+
+View comprehensive system statistics:
 
 ```bash
-# Project initialization
-npm init -y
-npm install --save-dev jest prettier eslint
-
-# Feature development
-./scripts/new-feature.sh <name>
-git checkout -b feature/<name>
-
-# Quality checks
-npm run lint
-npm run test
-./scripts/pre-commit-checks.sh
-
-# Status monitoring
-./scripts/workflow-status.sh
-git log --oneline -10
+npm run status
 ```
 
-## Troubleshooting
+Shows:
+- Purchase statistics and success rates
+- Gift card redemption status
+- Pending operations
+- Configuration details
+- Latest transaction details
 
-### Scripts not executable
+### Logs
+
+Logs are stored in the `logs/` directory:
+- `combined.log` - All system logs
+- `error.log` - Error logs only
+- `audit.log` - Financial transaction audit trail
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Login Failures**
+- Verify credentials with `npm run setup`
+- Check for 2FA requirements
+- Ensure browser is up to date
+
+**Email Not Found**
+- Verify email filters in `.env`
+- Check Gmail app password
+- Ensure IMAP is enabled
+
+**Redemption Failures**
+- Verify Uber credentials
+- Check for account restrictions
+- Review redemption error logs
+
+**CAPTCHA Challenges**
+- Run in non-headless mode: `BROWSER_HEADLESS=false`
+- Solve CAPTCHA manually when prompted
+- Consider using proxy rotation
+
+### Reset Credentials
+
+If credentials become corrupted:
+
 ```bash
-chmod +x scripts/*.sh
+npm run reset-credentials
+npm run setup
 ```
 
-### Missing dependencies
-```bash
-# Install required tools
-npm install -g prettier eslint jest
+## 🔧 Configuration Options
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `SCHEDULING_ENABLED` | Enable automatic scheduling | `true` |
+| `CRON_EXPRESSION` | Purchase schedule (cron format) | `0 10 * * 0` |
+| `TIMEZONE` | Timezone for scheduling | `America/Los_Angeles` |
+| `BROWSER_HEADLESS` | Run browser in headless mode | `false` |
+| `EMAIL_CHECK_INTERVAL` | Email check interval (ms) | `300000` |
+| `MAX_RETRIES` | Maximum retry attempts | `3` |
+| `RETRY_BACKOFF` | Retry delay multiplier | `2` |
+
+### Advanced Configuration
+
+Create `config.json` for advanced settings:
+
+```json
+{
+  "costco": {
+    "productSearchTerms": ["uber eats gift card", "uber gift"],
+    "timeoutMs": 30000
+  },
+  "email": {
+    "searchCriteria": {
+      "from": ["costco@costco.com"],
+      "subject": ["order confirmation", "gift card"]
+    }
+  }
+}
 ```
 
-### AI agent confused
-1. Ensure CLAUDE.md is up to date
-2. Check PROJECT-STATUS.md reflects current state
-3. Review recent entries in DECISION-LOG.md
+## 📝 Development Status
 
-## Version
+### Completed Features ✅
+- Core automation framework
+- Costco purchase automation
+- Email monitoring (Gmail/IMAP)
+- Uber Eats redemption
+- Scheduler with cron jobs
+- Notification system
+- Manual trigger scripts
+- Secure credential storage
 
-Template Version: 1.0.0
-Created: 2024
-Purpose: Prevent tech debt in AI-assisted development
+### Roadmap 🚧
+- [ ] TOTP support for 2FA
+- [ ] REST API for remote control
+- [ ] Docker containerization
+- [ ] Web dashboard UI
+- [ ] Automated test suite
+- [ ] Proxy rotation support
+- [ ] Multiple account support
 
-## Support
+## 🤝 Contributing
 
-For issues or improvements, update the templates and regenerate your project structure.
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## ⚠️ Disclaimer
+
+This automation tool is for personal use only. Users are responsible for:
+- Complying with Costco and Uber Eats terms of service
+- Managing their own financial transactions
+- Ensuring legal compliance in their jurisdiction
+
+The authors are not responsible for any account restrictions, financial losses, or other consequences from using this software.
+
+## 🆘 Support
+
+- **Issues**: [GitHub Issues](https://github.com/tossww/vc-2025-09-16-costco-uber-automation3/issues)
+- **Source**: [GitHub Repository](https://github.com/tossww/vc-2025-09-16-costco-uber-automation3)
+
+## 🙏 Acknowledgments
+
+- Built with [Playwright](https://playwright.dev/) for web automation
+- [Prisma](https://www.prisma.io/) for database management
+- [Node-cron](https://github.com/node-cron/node-cron) for scheduling
+- [Winston](https://github.com/winstonjs/winston) for logging
+
+---
+
+**Made with ❤️ by [Steven Wang](https://github.com/tossww)**

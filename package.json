@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "setup": "tsx src/scripts/setup.ts",
+    "setup:totp": "tsx src/scripts/setup-totp.ts",
     "reset-credentials": "tsx src/scripts/reset-credentials.ts",
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
@@ -47,7 +48,9 @@
     "playwright": "^1.40.0",
     "playwright-extra": "^4.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "qrcode": "^1.5.4",
     "redis": "^4.6.10",
+    "speakeasy": "^2.0.0",
     "sqlite3": "^5.1.6",
     "winston": "^3.11.0",
     "zod": "^3.22.4"

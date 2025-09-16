@@ -180,9 +180,8 @@ export class CostcoAutomation extends BaseAutomation {
   }
 
   private generateTOTP(secret: string): string {
-    // TODO: Implement TOTP generation
-    // For now, throw error
-    throw new Error('TOTP generation not yet implemented');
+    const { TOTPManager } = require('../../security/totp');
+    return TOTPManager.generateToken(secret);
   }
 
   private async searchForGiftCard(): Promise<void> {
