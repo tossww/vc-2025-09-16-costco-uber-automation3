@@ -1,8 +1,8 @@
 # System Architecture & Module Boundaries
 
-**Last Updated:** [Date]
-**Version:** 1.0
-**Owner:** [Your Name]
+**Last Updated:** September 16, 2025
+**Version:** 2.0
+**Owner:** Steven Wang
 
 ## Architecture Philosophy
 
@@ -26,12 +26,19 @@
 ```
 /
 ├── modules/                    # Core business logic modules
-│   ├── knowledge/             # Second brain and note management
-│   ├── processing/            # Data processing pipelines
-│   ├── ui/                    # User interface components
-│   ├── study/                 # Learning and study applications
+│   ├── automation/            # Core automation and orchestration
+│   ├── web-scraping/          # Web scraping and browser automation
+│   ├── email-monitoring/      # Email parsing and monitoring
+│   ├── scheduling/            # Job scheduling and workflow management
+│   ├── state-management/      # Persistence and state tracking
+│   ├── security/              # Secrets management and encryption
+│   ├── notifications/         # Alert and notification system
 │   └── shared/                # Common utilities and types
 ├── services/                  # External service integrations
+│   ├── costco-service/        # Costco website integration
+│   ├── email-service/         # Email provider integrations
+│   ├── uber-service/          # Uber Eats API integration
+│   └── notification-service/  # Slack/Discord/Email notifications
 ├── infrastructure/            # Deployment and operational code
 ├── tools/                     # Development and build tools
 └── docs/                      # Project documentation
@@ -48,187 +55,317 @@
 
 ## Module Definitions
 
-### 1. Knowledge Module (`/modules/knowledge/`)
+### 1. Automation Module (`/modules/automation/`)
 
-**Purpose:** Manage personal knowledge, notes, and second brain functionality
+**Purpose:** Core automation orchestration and workflow management for the Costco-Uber gift card system
 
 ```
-/modules/knowledge/
-├── capture/                   # Content ingestion and input processing
-│   ├── web-clipper/          # Browser extension integration
-│   ├── file-import/          # PDF, markdown, document processing
-│   ├── api-ingestion/        # External API content fetching
-│   └── manual-entry/         # User-created content forms
-├── processing/               # Content analysis and enrichment
-│   ├── nlp/                  # Text processing and analysis
-│   ├── linking/              # Automatic relationship detection
-│   ├── tagging/              # Content categorization
-│   └── embeddings/           # Semantic vector generation
-├── storage/                  # Data persistence and schemas
-│   ├── models/               # Data models and schemas
-│   ├── repositories/         # Data access layer
-│   ├── search-indices/       # Full-text and vector indices
-│   └── migrations/           # Database schema changes
-├── retrieval/                # Content discovery and search
-│   ├── search/               # Full-text and semantic search
-│   ├── recommendations/      # Content suggestion algorithms
-│   ├── graph-traversal/      # Link-based navigation
-│   └── filters/              # Content filtering and faceting
-└── presentation/             # UI components for knowledge display
-    ├── components/           # Reusable UI elements
-    ├── views/                # Page-level components
-    ├── workflows/            # Multi-step user interactions
-    └── exports/              # Content export functionality
+/modules/automation/
+├── orchestrator/             # Main workflow coordination
+│   ├── purchase-workflow/    # Costco purchase automation flow
+│   ├── email-workflow/       # Email monitoring and processing flow
+│   ├── redemption-workflow/  # Uber redemption automation flow
+│   └── recovery-workflow/    # Error recovery and retry logic
+├── state-machine/            # Workflow state management
+│   ├── purchase-states/      # Purchase process state tracking
+│   ├── email-states/         # Email processing state tracking
+│   ├── redemption-states/    # Redemption process state tracking
+│   └── transition-handlers/  # State transition logic
+├── retry-engine/             # Retry and backoff logic
+│   ├── exponential-backoff/  # Configurable backoff strategies
+│   ├── circuit-breaker/      # Failure detection and prevention
+│   ├── deadletter-queue/     # Failed operation handling
+│   └── recovery-strategies/  # Automated recovery patterns
+└── monitoring/               # Operation monitoring and metrics
+    ├── health-checks/        # System health validation
+    ├── performance-metrics/  # Timing and throughput tracking
+    ├── audit-logging/        # Financial transaction auditing
+    └── alerting/             # Real-time issue detection
 ```
 
 **Key Interfaces:**
-- `ContentIngestionAPI` - Accept content from various sources
-- `SearchAPI` - Query and retrieve content
-- `LinkingAPI` - Manage relationships between content
-- `ExportAPI` - Generate outputs in various formats
+- `WorkflowOrchestratorAPI` - Coordinate multi-step automation workflows
+- `StateManagementAPI` - Track and persist workflow state
+- `RetryEngineAPI` - Handle failures and retry logic
+- `MonitoringAPI` - System health and performance tracking
 
 **Data Ownership:**
-- Content storage (documents, notes, web clips)
-- Link relationships and graph structure
-- User-generated tags and classifications
-- Search indices and embeddings
+- Workflow execution state and history
+- Retry attempt tracking and backoff timers
+- Performance metrics and health status
+- Audit logs for all automation activities
 
-### 2. Processing Module (`/modules/processing/`)
+### 2. Web Scraping Module (`/modules/web-scraping/`)
 
-**Purpose:** Handle data processing pipelines, email triage, and automated workflows
+**Purpose:** Browser automation and web scraping for Costco and Uber Eats interactions
 
 ```
-/modules/processing/
-├── ingestion/                # Data input and validation
-│   ├── email/                # Email processing and parsing
-│   ├── documents/            # File processing (PDF, Office docs)
-│   ├── web-scraping/         # Website content extraction
-│   └── api-integrations/     # External API data fetching
-├── transformation/           # Core processing logic
-│   ├── content-analysis/     # Text analysis and NLP
-│   ├── data-cleaning/        # Normalization and validation
-│   ├── format-conversion/    # Between different data formats
-│   └── batch-operations/     # Bulk processing workflows
-├── classification/           # Automated categorization
-│   ├── ml-models/            # Machine learning classifiers
-│   ├── rule-engines/         # Business rule processing
-│   ├── training/             # Model training and updates
-│   └── evaluation/           # Performance metrics and testing
-├── routing/                  # Decision engine for processed data
-│   ├── decision-trees/       # Rule-based routing logic
-│   ├── priority-queues/      # Task prioritization
-│   ├── notifications/        # Alert and notification system
-│   └── automation/           # Automated action execution
-└── monitoring/               # Pipeline health and metrics
-    ├── metrics/              # Performance and health metrics
-    ├── logging/              # Structured logging and tracing
-    ├── alerting/             # Error and anomaly detection
-    └── debugging/            # Pipeline inspection tools
+/modules/web-scraping/
+├── browser-management/       # Browser lifecycle and session management
+│   ├── playwright-wrapper/   # Playwright browser automation
+│   ├── session-persistence/  # Cookie and session state management
+│   ├── proxy-management/     # IP rotation and proxy handling
+│   └── fingerprint-evasion/  # Anti-detection measures
+├── page-navigation/          # Website navigation and interaction
+│   ├── costco-navigation/    # Costco-specific navigation logic
+│   ├── uber-navigation/      # Uber Eats navigation logic
+│   ├── authentication/      # Login and session handling
+│   └── form-interaction/     # Form filling and submission
+├── element-detection/        # DOM element discovery and interaction
+│   ├── selector-strategies/  # Robust element selection
+│   ├── dynamic-content/      # Handling of dynamically loaded content
+│   ├── captcha-handling/     # CAPTCHA detection and solving
+│   └── anti-bot-detection/   # Detection of anti-bot measures
+├── data-extraction/          # Content extraction and parsing
+│   ├── product-scraping/     # Gift card product information
+│   ├── price-extraction/     # Pricing and availability data
+│   ├── confirmation-parsing/ # Purchase and redemption confirmations
+│   └── error-detection/      # Error message detection and handling
+└── automation-patterns/      # Reusable automation workflows
+    ├── purchase-automation/  # End-to-end purchase flows
+    ├── redemption-automation/# Gift card redemption flows
+    ├── account-management/   # Account status and balance checking
+    └── human-simulation/     # Human-like interaction patterns
 ```
 
 **Key Interfaces:**
-- `ProcessingPipelineAPI` - Submit items for processing
-- `ClassificationAPI` - Categorize and tag content
-- `RoutingAPI` - Determine actions based on processing results
-- `MonitoringAPI` - Track pipeline health and performance
+- `BrowserAutomationAPI` - Control browser instances and navigation
+- `ElementInteractionAPI` - Find and interact with page elements
+- `DataExtractionAPI` - Extract structured data from web pages
+- `AntiDetectionAPI` - Implement stealth and evasion measures
 
 **Data Ownership:**
-- Processing job queues and status
-- ML model weights and training data
-- Processing metrics and logs
-- Classification rules and configurations
+- Browser session state and cookies
+- Page interaction patterns and timing
+- Extracted product and pricing data
+- Anti-detection configuration and fingerprints
 
-### 3. UI Module (`/modules/ui/`)
+### 3. Email Monitoring Module (`/modules/email-monitoring/`)
 
-**Purpose:** User interface components and interaction workflows
+**Purpose:** Email processing, parsing, and gift card code extraction
 
 ```
-/modules/ui/
-├── components/               # Reusable UI components
-│   ├── forms/                # Input forms and validation
-│   ├── displays/             # Data presentation components
-│   ├── navigation/           # Menus, breadcrumbs, routing
-│   └── feedback/             # Loading states, errors, success messages
-├── workflows/                # Multi-step user processes
-│   ├── onboarding/           # New user setup and tutorials
-│   ├── content-creation/     # Note creation and editing flows
-│   ├── search-and-discovery/ # Content finding workflows
-│   └── settings-management/  # User preference configuration
-├── state/                    # Application state management
-│   ├── stores/               # Global state containers
-│   ├── reducers/             # State update logic
-│   ├── middleware/           # State persistence and sync
-│   └── selectors/            # Computed state derivations
-├── integrations/             # External service connections
-│   ├── auth-providers/       # Authentication services
-│   ├── storage-providers/    # Cloud storage services
-│   ├── notification-services/# Push notifications, email
-│   └── analytics/            # User behavior tracking
-└── accessibility/            # A11y features and testing
-    ├── screen-reader/        # Screen reader support
-    ├── keyboard-nav/         # Keyboard navigation
-    ├── color-contrast/       # Visual accessibility
-    └── testing/              # Accessibility test utilities
+/modules/email-monitoring/
+├── connection-management/    # Email provider connections
+│   ├── gmail-api/           # Gmail API integration
+│   ├── imap-client/         # IMAP protocol client
+│   ├── oauth-handler/       # OAuth authentication flow
+│   └── connection-pool/     # Connection lifecycle management
+├── email-processing/         # Email content parsing and analysis
+│   ├── message-filtering/   # Filter relevant emails by sender/subject
+│   ├── content-parsing/     # Extract text from HTML/plain emails
+│   ├── attachment-handler/  # Process PDF and image attachments
+│   └── duplicate-detection/ # Prevent duplicate processing
+├── code-extraction/          # Gift card code identification
+│   ├── pattern-matching/    # Regex patterns for gift card codes
+│   ├── ocr-processing/      # Extract codes from images/PDFs
+│   ├── validation/          # Validate extracted code format
+│   └── confidence-scoring/  # Rate extraction confidence
+├── state-tracking/           # Email processing state management
+│   ├── processed-tracking/  # Track processed emails to avoid duplicates
+│   ├── retry-management/    # Handle failed processing attempts
+│   ├── batch-processing/    # Process multiple emails efficiently
+│   └── checkpoint-recovery/ # Resume processing after interruptions
+└── monitoring/               # Email system health and metrics
+    ├── connection-health/   # Monitor email provider connectivity
+    ├── processing-metrics/  # Track processing speed and accuracy
+    ├── error-tracking/      # Log and categorize processing errors
+    └── alerting/            # Alert on processing failures or delays
 ```
 
 **Key Interfaces:**
-- `ComponentLibraryAPI` - Reusable UI components
-- `StateManagementAPI` - Global state operations
-- `WorkflowAPI` - Multi-step user interactions
-- `IntegrationAPI` - External service connections
+- `EmailConnectionAPI` - Manage email provider connections
+- `EmailProcessingAPI` - Process and parse email content
+- `CodeExtractionAPI` - Extract and validate gift card codes
+- `ProcessingStateAPI` - Track processing state and history
 
 **Data Ownership:**
-- UI state and user preferences
-- Form validation rules and schemas
-- Component configuration and themes
-- User interaction analytics
+- Email connection credentials and tokens
+- Email processing state and history
+- Extracted gift card codes and metadata
+- Processing metrics and error logs
 
-### 4. Study Module (`/modules/study/`)
+### 4. Scheduling Module (`/modules/scheduling/`)
 
-**Purpose:** Learning applications, spaced repetition, and educational tools
+**Purpose:** Job scheduling, cron management, and workflow timing coordination
 
 ```
-/modules/study/
-├── content-management/       # Study material organization
-│   ├── flashcards/           # Card creation and management
-│   ├── notes/                # Study notes and highlights
-│   ├── quizzes/              # Quiz creation and templates
-│   └── resources/            # Reference materials and links
-├── learning-algorithms/      # Spaced repetition and scheduling
-│   ├── spaced-repetition/    # SRS algorithms (SM2, FSRS, etc.)
-│   ├── difficulty-adjustment/# Dynamic difficulty scaling
-│   ├── progress-tracking/    # Learning analytics and metrics
-│   └── recommendations/      # Study session suggestions
-├── session-management/       # Study session workflows
-│   ├── session-planning/     # Study schedule generation
-│   ├── active-recall/        # Testing and quiz sessions
-│   ├── review-cycles/        # Scheduled review sessions
-│   └── break-management/     # Pomodoro and break timing
-├── progress-analytics/       # Learning progress and insights
-│   ├── performance-metrics/  # Success rates, timing, streaks
-│   ├── knowledge-mapping/    # Topic mastery visualization
-│   ├── trend-analysis/       # Learning pattern analysis
-│   └── goal-tracking/        # Study goal progress
-└── gamification/            # Motivation and engagement
-    ├── achievements/         # Badges, milestones, streaks
-    ├── leaderboards/         # Social comparison (if enabled)
-    ├── challenges/           # Daily/weekly study challenges
-    └── rewards/              # Point systems and unlocks
+/modules/scheduling/
+├── cron-management/          # Cron job scheduling and execution
+│   ├── cron-parser/         # Parse and validate cron expressions
+│   ├── job-scheduler/       # Schedule and execute recurring jobs
+│   ├── timezone-handling/   # Handle timezone conversions and DST
+│   └── schedule-validation/ # Validate scheduling configurations
+├── workflow-timing/          # Coordinate multi-step workflow timing
+│   ├── workflow-triggers/   # Define when workflows should start
+│   ├── dependency-management/ # Handle workflow dependencies
+│   ├── timeout-handling/    # Manage workflow and step timeouts
+│   └── parallel-execution/  # Coordinate parallel workflow steps
+├── job-persistence/          # Job state and execution tracking
+│   ├── job-queue/           # Persistent job queue management
+│   ├── execution-history/   # Track job execution history
+│   ├── failure-tracking/    # Record and analyze job failures
+│   └── retry-scheduling/    # Schedule retry attempts
+├── resource-management/      # Manage system resources for jobs
+│   ├── resource-pools/      # Manage browser instances and connections
+│   ├── load-balancing/      # Distribute work across resources
+│   ├── throttling/          # Rate limiting and backpressure
+│   └── cleanup/             # Resource cleanup and garbage collection
+└── monitoring/               # Scheduling system monitoring
+    ├── execution-metrics/   # Track job execution performance
+    ├── schedule-compliance/ # Monitor adherence to schedules
+    ├── resource-utilization/# Track resource usage patterns
+    └── alerting/            # Alert on scheduling failures or delays
 ```
 
 **Key Interfaces:**
-- `StudyContentAPI` - Manage study materials
-- `LearningAlgorithmAPI` - Schedule and optimize reviews
-- `SessionAPI` - Conduct study sessions
-- `ProgressAPI` - Track and analyze learning progress
+- `JobSchedulerAPI` - Schedule and manage recurring jobs
+- `WorkflowTimingAPI` - Coordinate workflow execution timing
+- `JobPersistenceAPI` - Persist and track job state
+- `ResourceManagementAPI` - Manage system resources for scheduled jobs
 
 **Data Ownership:**
-- Study materials and flashcards
-- Learning progress and performance data
-- Session history and timing
-- Personal study preferences and goals
+- Scheduled job definitions and configurations
+- Job execution history and performance metrics
+- Resource allocation and usage tracking
+- Schedule compliance and failure analytics
 
-### 5. Shared Module (`/modules/shared/`)
+### 5. State Management Module (`/modules/state-management/`)
+
+**Purpose:** Persistent state tracking and data persistence for automation workflows
+
+```
+/modules/state-management/
+├── data-models/              # Core data models and schemas
+│   ├── purchase-models/     # Purchase attempt and transaction models
+│   ├── email-models/        # Email processing and code extraction models
+│   ├── redemption-models/   # Gift card redemption tracking models
+│   └── system-models/       # System configuration and health models
+├── persistence/              # Database and storage management
+│   ├── database-adapters/   # Database connection and query management
+│   ├── transaction-manager/ # ACID transaction handling
+│   ├── migration-engine/    # Database schema migrations
+│   └── backup-recovery/     # Data backup and recovery procedures
+├── state-tracking/           # Workflow state management
+│   ├── workflow-state/      # Track current state of automation workflows
+│   ├── checkpoint-manager/  # Create and restore workflow checkpoints
+│   ├── state-transitions/   # Manage state transition logic
+│   └── conflict-resolution/ # Handle concurrent state modifications
+├── caching/                  # In-memory state caching
+│   ├── cache-manager/       # Manage cache lifecycle and eviction
+│   ├── cache-strategies/    # Different caching strategies and policies
+│   ├── cache-invalidation/  # Handle cache invalidation events
+│   └── distributed-cache/   # Support for distributed caching
+└── analytics/                # Data analytics and reporting
+    ├── performance-analytics/ # Track system performance metrics
+    ├── financial-analytics/  # Track financial transaction patterns
+    ├── trend-analysis/       # Identify patterns in automation data
+    └── reporting/            # Generate reports and insights
+```
+
+**Key Interfaces:**
+- `StateManagementAPI` - Persist and retrieve workflow state
+- `DataModelAPI` - CRUD operations for core data models
+- `CachingAPI` - Manage in-memory state caching
+- `AnalyticsAPI` - Generate insights and reports from automation data
+
+**Data Ownership:**
+- All persistent automation data and state
+- Database schemas and migration history
+- Cached state and performance metrics
+- Analytics data and generated reports
+
+### 6. Security Module (`/modules/security/`)
+
+**Purpose:** Secrets management, encryption, and security controls
+
+```
+/modules/security/
+├── secrets-management/       # Credential and secrets handling
+│   ├── vault-integration/   # HashiCorp Vault or similar integration
+│   ├── key-derivation/      # Key derivation and management
+│   ├── credential-rotation/ # Automatic credential rotation
+│   └── access-control/      # Role-based access to secrets
+├── encryption/               # Data encryption and cryptography
+│   ├── at-rest-encryption/  # Encrypt stored data and files
+│   ├── in-transit-encryption/ # TLS and encrypted communications
+│   ├── key-management/      # Encryption key lifecycle management
+│   └── crypto-utilities/    # Cryptographic utility functions
+├── authentication/           # Authentication and session management
+│   ├── multi-factor-auth/   # MFA integration for sensitive operations
+│   ├── session-management/  # Secure session handling
+│   ├── token-management/    # OAuth and API token management
+│   └── certificate-management/ # TLS certificate management
+├── audit-logging/            # Security audit and compliance
+│   ├── security-events/     # Log security-relevant events
+│   ├── access-logging/      # Track access to sensitive resources
+│   ├── compliance-reporting/ # Generate compliance reports
+│   └── forensic-tools/      # Security incident investigation tools
+└── threat-detection/         # Security monitoring and detection
+    ├── anomaly-detection/   # Detect unusual patterns in system behavior
+    ├── intrusion-detection/ # Monitor for unauthorized access attempts
+    ├── vulnerability-scanning/ # Regular security vulnerability assessments
+    └── incident-response/   # Automated response to security incidents
+```
+
+**Key Interfaces:**
+- `SecretsManagementAPI` - Store and retrieve sensitive credentials
+- `EncryptionAPI` - Encrypt and decrypt data
+- `AuthenticationAPI` - Handle authentication and authorization
+- `AuditLoggingAPI` - Log security events and generate audit trails
+
+**Data Ownership:**
+- Encrypted credentials and secrets
+- Security audit logs and compliance data
+- Authentication tokens and certificates
+- Security configuration and policies
+
+### 7. Notifications Module (`/modules/notifications/`)
+
+**Purpose:** Alert and notification system for automation events
+
+```
+/modules/notifications/
+├── notification-channels/    # Multiple notification delivery channels
+│   ├── slack-integration/   # Slack webhook and bot integration
+│   ├── discord-integration/ # Discord webhook and bot integration
+│   ├── email-notifications/ # SMTP email notification delivery
+│   └── webhook-delivery/    # Generic webhook notification delivery
+├── message-formatting/       # Message content generation and formatting
+│   ├── template-engine/     # Notification message templates
+│   ├── content-generation/  # Dynamic content generation
+│   ├── markdown-formatting/ # Rich text formatting for messages
+│   └── attachment-handling/ # File and image attachments
+├── notification-rules/       # Configure when and how to send notifications
+│   ├── rule-engine/         # Define notification triggering rules
+│   ├── priority-management/ # Manage notification priority levels
+│   ├── frequency-control/   # Control notification frequency and throttling
+│   └── escalation-policies/ # Handle notification escalation procedures
+├── delivery-management/      # Reliable notification delivery
+│   ├── retry-logic/         # Retry failed notification deliveries
+│   ├── delivery-tracking/   # Track notification delivery status
+│   ├── failover-handling/   # Handle failed delivery channels
+│   └── batch-processing/    # Batch multiple notifications efficiently
+└── monitoring/               # Notification system monitoring
+    ├── delivery-metrics/    # Track notification delivery success rates
+    ├── performance-monitoring/ # Monitor notification system performance
+    ├── error-tracking/      # Track and analyze notification failures
+    └── user-feedback/       # Collect feedback on notification effectiveness
+```
+
+**Key Interfaces:**
+- `NotificationChannelAPI` - Send notifications through various channels
+- `MessageFormattingAPI` - Generate and format notification content
+- `NotificationRuleAPI` - Configure notification triggering rules
+- `DeliveryTrackingAPI` - Track notification delivery status
+
+**Data Ownership:**
+- Notification templates and formatting rules
+- Delivery history and success/failure metrics
+- User notification preferences and settings
+- Channel configuration and credentials
+
+### 8. Shared Module (`/modules/shared/`)
 
 **Purpose:** Common utilities, types, and cross-cutting concerns
 
@@ -277,25 +414,34 @@
 
 ## Data Flow Architecture
 
-### Request/Response Flow
+### Automation Workflow Flow
 ```
-User Request → UI Module → Processing Module → Knowledge/Study Module → Storage
-              ↓
-Response ← UI Module ← Processing Module ← Knowledge/Study Module ← Storage
+Scheduler → Automation Module → Web Scraping → Costco Purchase → State Management
+    ↓              ↓                ↓               ↓                ↓
+Email Monitor → Code Extraction → Redemption → Uber Eats → Notifications
+    ↓              ↓                ↓               ↓                ↓
+Security ← State Persistence ← Error Recovery ← Retry Logic ← Audit Logging
 ```
 
 ### Event-Driven Architecture
 ```
-Event Source → Event Bus → Event Handlers → State Updates → UI Updates
-              ↓
-           Event Store → Analytics → Monitoring
+Automation Events → Event Bus → Module Handlers → State Updates → Notifications
+                   ↓
+             Audit Store → Security Logs → Monitoring → Alerting
 ```
 
-### Data Processing Pipeline
+### Purchase & Redemption Pipeline
 ```
-Input → Validation → Transformation → Classification → Routing → Storage
-  ↓         ↓              ↓              ↓           ↓        ↓
-Monitoring ← Error Handling ← Retry Logic ← Metrics ← Logging ← Alerts
+Schedule Trigger → Purchase Workflow → Email Processing → Code Extraction → Redemption
+       ↓                  ↓                  ↓                ↓              ↓
+   Monitoring ← Security Audit ← State Tracking ← Error Handling ← Retry Logic
+```
+
+### Security & Compliance Flow
+```
+Credential Request → Security Module → Encryption → Secure Storage
+        ↓                   ↓              ↓            ↓
+   Audit Logging ← Access Control ← Token Management ← Key Rotation
 ```
 
 ---
@@ -353,18 +499,40 @@ import { Content } from '../shared/types/domain';
 #### Service Layer Pattern
 ```
 /services/
-├── email-service/            # Email provider integration
-├── storage-service/          # Cloud storage (S3, GCS, etc.)
-├── auth-service/             # Authentication providers
-├── notification-service/     # Push notifications, SMS
-└── analytics-service/        # User behavior tracking
+├── costco-service/           # Costco website integration
+│   ├── authentication/      # Costco account login and session management
+│   ├── product-search/      # Gift card product discovery
+│   ├── checkout-automation/ # Shopping cart and payment processing
+│   └── order-tracking/      # Purchase confirmation and tracking
+├── email-service/            # Email provider integrations
+│   ├── gmail-api/          # Gmail API integration
+│   ├── imap-client/        # Generic IMAP email access
+│   ├── outlook-api/        # Microsoft Outlook integration
+│   └── email-parsing/      # Email content parsing utilities
+├── uber-service/             # Uber Eats integration
+│   ├── authentication/     # Uber account login and session management
+│   ├── gift-card-redemption/ # Gift card code redemption
+│   ├── balance-checking/   # Account balance verification
+│   └── transaction-history/ # Redemption history tracking
+├── notification-service/     # Multi-channel notifications
+│   ├── slack-webhooks/     # Slack integration
+│   ├── discord-webhooks/   # Discord integration
+│   ├── email-smtp/         # Email notifications
+│   └── webhook-delivery/   # Generic webhook notifications
+└── security-service/        # External security integrations
+    ├── vault-integration/  # HashiCorp Vault or similar
+    ├── captcha-solving/    # CAPTCHA solving services
+    ├── proxy-management/   # Proxy rotation services
+    └── monitoring-tools/   # Security monitoring integrations
 ```
 
 Each service module provides:
-- Connection management
-- Error handling and retries
+- Connection management and authentication
+- Error handling and retries with exponential backoff
 - Rate limiting and circuit breakers
+- Anti-detection and stealth measures
 - Monitoring and health checks
+- Secure credential management
 
 ---
 
@@ -372,23 +540,35 @@ Each service module provides:
 
 ### Allowed Dependencies
 ```
-UI Module → Knowledge Module ✅
-UI Module → Study Module ✅
-UI Module → Processing Module ✅
-UI Module → Shared Module ✅
+Automation Module → Web Scraping Module ✅
+Automation Module → Email Monitoring Module ✅
+Automation Module → Scheduling Module ✅
+Automation Module → State Management Module ✅
+Automation Module → Notifications Module ✅
+Automation Module → Shared Module ✅
 
-Knowledge Module → Shared Module ✅
-Study Module → Shared Module ✅
-Processing Module → Shared Module ✅
+Web Scraping Module → Security Module ✅
+Web Scraping Module → Shared Module ✅
+Email Monitoring Module → Security Module ✅
+Email Monitoring Module → Shared Module ✅
+Scheduling Module → State Management Module ✅
+Scheduling Module → Shared Module ✅
+State Management Module → Security Module ✅
+State Management Module → Shared Module ✅
+Security Module → Shared Module ✅
+Notifications Module → Shared Module ✅
 
 Any Module → Services (via interfaces) ✅
 ```
 
 ### Forbidden Dependencies
 ```
-Knowledge Module → UI Module ❌
-Study Module → Processing Module ❌ (use events instead)
-Processing Module → Knowledge Module ❌ (use events instead)
+Web Scraping Module → Automation Module ❌ (use events instead)
+Email Monitoring Module → Automation Module ❌ (use events instead)
+Scheduling Module → Automation Module ❌ (use events instead)
+State Management Module → Automation Module ❌
+Security Module → Any Business Module ❌
+Notifications Module → Any Business Module (except via events) ❌
 Shared Module → Any Business Module ❌
 ```
 
