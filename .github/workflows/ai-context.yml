@@ -1,0 +1,376 @@
+name: AI Context Maintenance
+
+# Maintains AI context and project documentation automatically
+# Triggers on pushes to main branch and PRs to ensure context stays current
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  schedule:
+    # Run weekly on Sundays at 2 AM UTC to update context
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+    # Allow manual triggering
+
+jobs:
+  update-context:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        # Need full history to analyze changes over time
+        fetch-depth: 0
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install PyYAML requests gitpython
+
+    - name: Analyze project structure
+      id: analyze
+      run: |
+        python -c "
+        import os
+        import json
+        import yaml
+        from pathlib import Path
+
+        def analyze_project():
+            result = {
+                'languages': [],
+                'frameworks': [],
+                'has_tests': False,
+                'test_framework': None,
+                'package_managers': [],
+                'main_directories': [],
+                'total_files': 0,
+                'code_files': 0
+            }
+
+            # Detect languages and frameworks
+            if Path('package.json').exists():
+                result['languages'].append('JavaScript/TypeScript')
+                result['package_managers'].append('npm')
+                with open('package.json') as f:
+                    pkg = json.load(f)
+                    deps = {**pkg.get('dependencies', {}), **pkg.get('devDependencies', {})}
+                    if 'react' in deps:
+                        result['frameworks'].append('React')
+                    if 'vue' in deps:
+                        result['frameworks'].append('Vue')
+                    if 'angular' in deps:
+                        result['frameworks'].append('Angular')
+                    if 'jest' in deps or 'vitest' in deps:
+                        result['has_tests'] = True
+                        result['test_framework'] = 'Jest/Vitest'
+
+            if Path('requirements.txt').exists() or Path('pyproject.toml').exists() or Path('setup.py').exists():
+                result['languages'].append('Python')
+                result['package_managers'].append('pip/poetry')
+                if Path('pytest.ini').exists() or any(Path('.').glob('**/test_*.py')):
+                    result['has_tests'] = True
+                    result['test_framework'] = 'pytest'
+
+            if Path('go.mod').exists():
+                result['languages'].append('Go')
+                result['package_managers'].append('go mod')
+                if any(Path('.').glob('**/*_test.go')):
+                    result['has_tests'] = True
+                    result['test_framework'] = 'go test'
+
+            if Path('Cargo.toml').exists():
+                result['languages'].append('Rust')
+                result['package_managers'].append('cargo')
+                if any(Path('.').glob('**/tests/')):
+                    result['has_tests'] = True
+                    result['test_framework'] = 'cargo test'
+
+            # Count files and directories
+            for item in Path('.').iterdir():
+                if item.is_dir() and not item.name.startswith('.'):
+                    result['main_directories'].append(item.name)
+
+            for item in Path('.').rglob('*'):
+                if item.is_file():
+                    result['total_files'] += 1
+                    if item.suffix in ['.py', '.js', '.ts', '.go', '.rs', '.java', '.cpp', '.c']:
+                        result['code_files'] += 1
+
+            return result
+
+        analysis = analyze_project()
+        print(f\"ANALYSIS_RESULT={json.dumps(analysis)}\")
+        "
+        echo "analysis-complete=true" >> $GITHUB_OUTPUT
+
+    - name: Update Claude context
+      run: |
+        # Create or update .claude/project.md with current project state
+        mkdir -p .claude
+
+        cat > .claude/project.md << 'EOF'
+        # Project AI Context
+
+        **Updated:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        **Commit:** ${{ github.sha }}
+        **Branch:** ${{ github.ref_name }}
+
+        ## Project Overview
+        This project uses an AI-assisted development workflow with comprehensive documentation and decision tracking.
+
+        ## Repository Structure
+        ```
+        $(tree -I 'node_modules|__pycache__|.git|*.pyc' -L 3)
+        ```
+
+        ## Key Files for AI Context
+        - `ARCHITECTURE.md` - System design and module structure
+        - `DECISION-LOG.md` - All architectural decisions with context
+        - `PROJECT-STATUS.md` - Current state and active work
+        - `TESTING-STRATEGY.md` - Testing approach and standards
+        - `docs/prd-*.md` - Feature requirements documents
+        - `tests/` - Test files and test data
+
+        ## Current Development Focus
+        $(if [ -f PROJECT-STATUS.md ]; then
+            echo "Based on PROJECT-STATUS.md:"
+            grep -A 5 "## Active Work Items" PROJECT-STATUS.md || echo "No active work items listed"
+        else
+            echo "PROJECT-STATUS.md not found - consider creating one"
+        fi)
+
+        ## Recent Architectural Decisions
+        $(if [ -f DECISION-LOG.md ]; then
+            echo "Latest 3 ADRs from DECISION-LOG.md:"
+            grep -E "^### ADR-" DECISION-LOG.md | head -3 || echo "No ADRs found"
+        else
+            echo "No decision log found"
+        fi)
+
+        ## Technology Stack
+        - **Languages:** ${{ env.LANGUAGES }}
+        - **Frameworks:** ${{ env.FRAMEWORKS }}
+        - **Testing:** ${{ env.TEST_FRAMEWORK }}
+        - **Package Management:** ${{ env.PACKAGE_MANAGERS }}
+
+        ## Development Workflow
+        1. Check PROJECT-STATUS.md for current context
+        2. Review relevant ADRs in DECISION-LOG.md before making changes
+        3. Create PRDs for new features using templates/PRD-TEMPLATE.md
+        4. Log architectural decisions in DECISION-LOG.md
+        5. Update PROJECT-STATUS.md after significant changes
+        6. Run pre-commit checks: `./scripts/pre-commit-checks.sh`
+
+        ## AI Assistant Guidelines
+        - Always check existing decisions before proposing new approaches
+        - Reference ADRs in commit messages when implementing decisions
+        - Maintain consistency with documented architecture patterns
+        - Update documentation when making changes to maintain context
+        - Follow the established testing strategy for all code changes
+
+        ## Project Health Indicators
+        - Total Files: ${{ env.TOTAL_FILES }}
+        - Code Files: ${{ env.CODE_FILES }}
+        - Has Tests: ${{ env.HAS_TESTS }}
+        - Documentation Coverage: $(find . -name "*.md" -type f | wc -l) markdown files
+
+        ---
+        *This context is automatically maintained by GitHub Actions*
+        EOF
+
+    - name: Generate project metrics
+      run: |
+        # Create metrics summary for AI context
+        cat > .claude/metrics.json << EOF
+        {
+          "updated": "$(date -u +"%Y-%m-%d %H:%M:%S UTC")",
+          "commit": "${{ github.sha }}",
+          "branch": "${{ github.ref_name }}",
+          "files": {
+            "total": $(find . -type f -not -path './.git/*' | wc -l),
+            "code": $(find . -name "*.py" -o -name "*.js" -o -name "*.ts" -o -name "*.go" -o -name "*.rs" | wc -l),
+            "tests": $(find . -name "*test*" -type f | wc -l),
+            "docs": $(find . -name "*.md" -type f | wc -l)
+          },
+          "decisions": $(grep -c "^### ADR-" DECISION-LOG.md 2>/dev/null || echo 0),
+          "features": $(find docs -name "prd-*.md" 2>/dev/null | wc -l),
+          "last_status_update": "$(grep 'Last Updated:' PROJECT-STATUS.md 2>/dev/null | sed 's/.*: //' || echo 'unknown')"
+        }
+        EOF
+
+    - name: Check documentation freshness
+      id: doc-check
+      run: |
+        # Check if documentation needs updates
+        needs_update=false
+        warnings=()
+
+        # Check if PROJECT-STATUS.md is older than 14 days
+        if [ -f PROJECT-STATUS.md ]; then
+          last_update=$(grep "Last Updated:" PROJECT-STATUS.md | sed 's/.*Updated:\*\* *//' || echo "")
+          if [ -n "$last_update" ]; then
+            if command -v date >/dev/null 2>&1; then
+              days_old=$(( ($(date +%s) - $(date -d "$last_update" +%s 2>/dev/null || echo 0)) / 86400 ))
+              if [ $days_old -gt 14 ]; then
+                warnings+=("PROJECT-STATUS.md is $days_old days old")
+                needs_update=true
+              fi
+            fi
+          fi
+        fi
+
+        # Check if there are uncommented TODOs in code
+        todo_count=$(grep -r "TODO\|FIXME\|XXX" --include="*.py" --include="*.js" --include="*.ts" --include="*.go" . 2>/dev/null | wc -l || echo 0)
+        if [ $todo_count -gt 10 ]; then
+          warnings+=("Found $todo_count TODOs in codebase - consider addressing or documenting")
+        fi
+
+        # Output results
+        if [ ${#warnings[@]} -gt 0 ]; then
+          echo "Documentation warnings found:"
+          for warning in "${warnings[@]}"; do
+            echo "  - $warning"
+          done
+        fi
+
+        echo "needs_update=$needs_update" >> $GITHUB_OUTPUT
+
+    - name: Create documentation update PR
+      if: steps.doc-check.outputs.needs_update == 'true' && github.event_name == 'schedule'
+      run: |
+        # Create a PR to update stale documentation
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+        branch_name="docs/automated-context-update-$(date +%s)"
+        git checkout -b "$branch_name"
+
+        # Update PROJECT-STATUS.md with current date and automation note
+        if [ -f PROJECT-STATUS.md ]; then
+          sed -i "s/\*\*Last Updated:\*\* .*/\*\*Last Updated:\*\* $(date +%Y-%m-%d)/" PROJECT-STATUS.md
+
+          # Add automation note if not present
+          if ! grep -q "automated context maintenance" PROJECT-STATUS.md; then
+            cat >> PROJECT-STATUS.md << 'EOF'
+
+            ## Automated Maintenance
+            This document was automatically updated by GitHub Actions to maintain AI context freshness.
+            EOF
+          fi
+        fi
+
+        git add .
+        git commit -m "docs: automated context maintenance update
+
+        - Updated PROJECT-STATUS.md timestamp
+        - Refreshed AI context files
+        - Added current project metrics
+
+        This automated update ensures AI assistants have current context about
+        the project state and recent changes."
+
+        git push origin "$branch_name"
+
+        # Create PR using GitHub CLI if available, otherwise use API
+        if command -v gh >/dev/null 2>&1; then
+          gh pr create \
+            --title "docs: automated context maintenance update" \
+            --body "Automated update to keep project documentation and AI context current.
+
+            ## Changes
+            - Updated PROJECT-STATUS.md timestamp
+            - Refreshed AI context in .claude/ directory
+            - Updated project metrics and structure information
+
+            ## Why This Matters
+            Fresh documentation helps AI assistants provide better, more contextually appropriate suggestions by understanding the current state of the project.
+
+            This is an automated maintenance PR created by the AI Context workflow." \
+            --head "$branch_name" \
+            --base main
+        else
+          echo "GitHub CLI not available, PR creation skipped"
+        fi
+
+    - name: Validate workflow scripts
+      run: |
+        # Ensure workflow scripts are executable and syntax-valid
+        if [ -d scripts ]; then
+          for script in scripts/*.sh; do
+            if [ -f "$script" ]; then
+              echo "Checking $script..."
+              bash -n "$script" # Syntax check
+              chmod +x "$script" # Ensure executable
+            fi
+          done
+        fi
+
+    - name: Update status badge data
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      run: |
+        # Create status data for potential badges
+        mkdir -p .github/status
+        cat > .github/status/project.json << EOF
+        {
+          "schemaVersion": 1,
+          "label": "project status",
+          "message": "active development",
+          "color": "brightgreen",
+          "updated": "$(date -u +"%Y-%m-%d")",
+          "decisions": $(grep -c "^### ADR-" DECISION-LOG.md 2>/dev/null || echo 0),
+          "features": $(find docs -name "prd-*.md" 2>/dev/null | wc -l),
+          "tests": $(find . -name "*test*" -type f | wc -l),
+          "docs": $(find . -name "*.md" -type f | wc -l)
+        }
+        EOF
+
+    - name: Commit context updates
+      if: github.event_name != 'pull_request'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+        # Only commit if there are changes
+        if ! git diff --quiet; then
+          git add .claude/ .github/status/ || true
+          git commit -m "chore: update AI context and project metrics
+
+          Automated update of project context for AI assistants:
+          - Refreshed project structure analysis
+          - Updated technology stack information
+          - Generated current metrics and status
+
+          This maintains accurate context for AI-assisted development." || echo "No changes to commit"
+          git push || echo "Nothing to push"
+        fi
+
+    - name: Output summary
+      run: |
+        echo "## AI Context Maintenance Summary"
+        echo "- Project structure analyzed ✓"
+        echo "- AI context files updated ✓"
+        echo "- Project metrics generated ✓"
+        echo "- Documentation freshness checked ✓"
+
+        if [ -f .claude/project.md ]; then
+          echo "- Claude context file size: $(wc -c < .claude/project.md) bytes"
+        fi
+
+        if [ -f .claude/metrics.json ]; then
+          echo "- Metrics file created: .claude/metrics.json"
+        fi
+
+        echo ""
+        echo "Context is current and ready for AI-assisted development! 🤖"

@@ -1,0 +1,42 @@
+# Commit Message Template for AI-Assisted Development
+# [type]: [brief description] (ADR-XXX if applicable)
+#
+# Longer explanation of what changed and why
+#
+# Decision Reference: ADR-XXX (if this implements a decision)
+# Testing: [describe testing done]
+# Breaking Changes: [none | describe]
+#
+# Types:
+# feat: new feature
+# fix: bug fix
+# docs: documentation changes
+# style: formatting, missing semicolons, etc
+# refactor: code change that neither fixes a bug nor adds a feature
+# test: adding missing tests
+# chore: maintain, tooling, dependencies
+# perf: performance improvements
+# build: changes to build system or dependencies
+# ci: changes to CI configuration
+# revert: reverts a previous commit
+#
+# Decision Reference Guidelines:
+# - Include ADR number when implementing architectural decisions
+# - Reference PRD when implementing features from requirements
+# - Mention related decisions even if not directly implementing
+#
+# Testing Guidelines:
+# - Describe what tests were run and passed
+# - Note any test coverage changes
+# - Mention performance benchmarks if relevant
+#
+# Examples:
+# feat: implement user authentication with JWT tokens (ADR-003)
+#
+# fix: resolve memory leak in data processing pipeline
+#
+# docs: update API documentation for v2.0 endpoints
+#
+# Decision Reference: ADR-003
+# Testing: Unit tests for token validation, integration tests for auth flow
+# Breaking Changes: Changes authentication from cookies to JWT headers
