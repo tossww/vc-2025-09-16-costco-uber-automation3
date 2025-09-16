@@ -160,6 +160,14 @@ export class DatabaseManager {
     return records.map(this.mapEmailRecord);
   }
 
+  public async getEmailByMessageId(messageId: string): Promise<EmailProcessingRecord | null> {
+    const record = await this.prisma.emailProcessingRecord.findUnique({
+      where: { emailId: messageId },
+    });
+
+    return record ? this.mapEmailRecord(record) : null;
+  }
+
   private mapEmailRecord(record: any): EmailProcessingRecord {
     return {
       ...record,
