@@ -270,6 +270,20 @@ export class DatabaseManager {
     });
   }
 
+  // Notification Logging
+  public async createNotificationLog(data: any): Promise<void> {
+    await this.prisma.notificationLog.create({
+      data: {
+        type: data.type,
+        recipient: data.recipient,
+        subject: data.subject,
+        content: data.content,
+        status: data.status,
+        errorMessage: data.errorMessage,
+      },
+    });
+  }
+
   // Statistics
   public async getStatistics(): Promise<any> {
     const [totalPurchases, successfulPurchases, totalGiftCards, redeemedGiftCards] = await Promise.all([
