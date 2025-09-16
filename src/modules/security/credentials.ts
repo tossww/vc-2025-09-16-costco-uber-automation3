@@ -26,7 +26,7 @@ export class CredentialManager {
   }
 
   private deriveKey(): Buffer {
-    const masterKey = process.env.MASTER_KEY || process.env.USER || 'default-key';
+    const masterKey = process.env.MASTER_KEY || 'default-master-key-change-this';
     const salt = process.env.SALT || 'costco-uber-automation-salt';
     return crypto.pbkdf2Sync(masterKey, salt, 100000, 32, 'sha256');
   }
